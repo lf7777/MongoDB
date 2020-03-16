@@ -1,0 +1,442 @@
+mongo 基础 目录 :
+
+一. 安装,开启关闭 mongo服务,英文翻译.
+二. 库相关 的操作.
+三. 集合相关 的操作.
+四. 数据的 增 : insert() 
+           删 : remove()
+           改 : save() update() 
+           查 : find() pretty() limit() skip() count() sort()
+五. 条件语句相关 小于等于大于... and or andor
+六. 聚合函数分组相关 : sum() max() min() avg()
+
+
+一. mongo 服务相关 :
+
+
+    sudo apt-get install mongodb
+
+    开启服务 :
+
+        service mongod start
+
+    关闭服务 :
+
+        service mongod 
+
+
+    英 文 : 
+
+            projection    投影
+
+            limit         限制
+
+            skip          跳过
+
+            collection    集合
+
+            multi         多种
+
+            aggregate     聚合
+
+
+
+二. 库 基 本 操 作 : 
+
+    
+    <1> show dbs;
+
+        查看所有库
+
+    <2> db;
+
+        查看当前 所在的库
+
+    <3> use database_name
+
+        创建 或 使用 某库:
+    
+    <3> db.dropDatabase()
+
+        删除 <库> Data 必须是大写
+
+        默认删当前(目前只测试可以 成功删除当前库)
+
+
+三. 集 合 相 关 操 作 :
+
+
+    <1> 查看所有集合 :
+
+        show collections / show tables
+
+    <2> 添加集合 :
+
+        db.collection_name.insert()
+
+        添加数据时 同时创建 集合.
+
+    <3> 删除 <集合>
+
+        db.collection_name.drop()
+
+    <4> 删除 <集合> 中所有数据 :
+
+        db.collection.remove({})
+
+
+四 . 数 据 相 关 操 作 :
+
+
+  < 添 加 > :
+
+    插入数据时,如果不指定 _id ,系统会默认分配一个 _id 键,其值是唯一的.
+
+    <1> 格 式 添 加 数 据 :
+        
+        db.collection_name.insert(document)
+
+        示 例 :
+
+        db.users.insert({'name':'张三','age':20})
+
+    <2> 指 定 ID 插入数据 :  
+
+        db.users.insert({'_id':100,'name':'张三'})
+
+    <3> 添 加 格 式 :
+
+        (1) 可以是 列表嵌套字典. [{},{},{}]
+
+        (2) 可以是变量 等等等. insert(variable)
+
+
+  < 删 除 > :
+
+    remove()
+
+    <1> 格 式 :
+
+        db.collection.remove(<query>,<justOne>)
+
+        参 数 :
+
+        <query>    查询条件
+
+        <justOne>  默认是 false 删除所有符合条件的.
+
+                   可修改为 true 或 1 ,则只删除一个.
+
+        示 例 : 
+
+                删除一个 : db.users.remove({'name':'小红'},1)
+
+                删除所有 : db.users.remove({'name':'小红'})
+
+                根据id删除 :
+
+
+  < 更 新 > :
+  
+    save()  根 据 _id 完全覆盖.(也可添加新数据)
+
+                 集 合 :   _id 存在    _id 不存在
+
+    指 定 _id :             覆盖          添加 
+
+    不指定_id :             添加          添加
+
+
+        修改就是完全替换 : 用新的 _id中的数据 完全替换旧的数据.
+
+    <1> 修 改 (新数据完全替换旧数据) : 
+        
+        db.users.save({'_id':100,'name':'newName'})
+
+        指定 对象 : "_id" : ObjectId("5e6888d3a0f91e7cf79fa471")
+
+            将 整个对象复制.
+
+    <2> 添 加 :
+
+        不指定 _id 为添加 : db.users.save({'name':'a'})
+
+        指定 不存在的 _id 为添加 db.users.save({'_id':123124,'name':'bb'})
+
+
+
+  < 修 改 > : 
+
+    update()  根 据 指定条件 修改.(也可添加新数据)
+
+        格 式 : 
+
+            db.collection.update(
+
+                <query>,            {查找条件},
+
+                <update>,           {更新内容} 格式为{$set:{'name':'小明'}},
+
+                {
+                  upsert:<boolean>
+
+                  multi:<boolean>
+                                    {upsert:ture,multi:true}
+                }
+            )
+
+
+        参 数 说 明 :
+
+            query  : update 的查询条件,类似sql查询内的where后面的条件.
+
+
+            updata : update的对象和一些更新的操作符($,$inc...),类似sql set后的.
+
+                     {$set:{键:值}}
+
+                     键存在 : 修改值
+
+                     键不存在 : 添加键值
+
+
+            upsert : 可选,如果条件 没有找到对应的数据,是否插入 新的object对象.
+
+                     true 为插入,默认是 false 不插入.
+
+                     插 入 内 容 : object对象,条件,要修改的内容全部插入.
+
+
+            multi  : 翻译为:多种.可选,默认 false,只更新 按条件找到的 第一条记录.
+                     如果参数为 true,则把 按条件找到的 多条记录 全部更新.
+
+        示 例 :
+
+    db.users.update({'name':'小红'},{$set:{'age':40}},{upsert:true,multi:true})
+
+
+  < 查 看 > :
+
+    find()
+
+        格 式 : db.collection.find(query,projection)
+
+        参 数 : query 可选,查询条件.默认查询所有.
+
+                projection 可选, 限制返回的列.
+
+
+            (1) query 参数用法 :
+
+                db.users.find({'_id':100})
+
+                db.users.find({'name':'小明'})
+
+            (2) projection 用法 :
+
+                非0 非 false 非字字符,数字类型或true 都是就是 true(显示).
+
+                0 或 false 表示 false.
+
+                db.users.find({'_id':100},{'age':true,'sex':true})
+
+                db.users.find({'name':'小明'},{'sex':false})
+
+                注 意 : projuection 是一个单的 字典.
+
+                        里面 要么都是 true ,要么都是 false.
+
+    
+     <1> db.users.find()
+
+         查看某个集合中的文档 :
+
+    <2> pretty()
+
+        以好看的格式 显示结果. 数据的格式化.
+
+        db.users.find().pretty()
+
+    <3> limit()
+
+        限制返回的 数据的行.
+
+        db.collection.find().limit()
+
+        示 例 : db.users.find().limit(3)
+
+    <4> skip()
+
+        跳过几行
+
+        db.collection.find().skip(3).limit(2)
+            跳过3行 返回一行
+
+        示 例 :
+
+        db.users.find().skip(2).limit(1)
+
+    <5> sort()
+
+        排序 1 为升序, -1 为降序列
+
+        语 法 : sort({key:1})
+
+        升 序 示 例 : db.users.find().sort({'age':1})
+
+        降 序 示 例 : db.users.find().sort({'age':-1})
+
+    <6> count()
+
+        数据统计
+
+        默 认 统 计 所 有 语 法 : db.collection.count()
+
+            示 例 : db.users.count()
+
+        统 计 指 定 条 件 的 次 数 语 法 : db.collection.count({key:value})
+
+            示 例 : db.users.count({'age':$lt{'age':20}})
+
+
+
+五. 条 件 语 句 :
+
+
+<1> 大 小 比 较 操 作 :
+
+    翻 译 :
+
+               english             简写
+
+    等 于    : equal                e
+    
+    小 于    : less than            lt
+
+    小于等于 : less than equal      lte
+
+    大 于    : greater than         gt
+
+    大于等于 : greater than equal   gte
+
+    不等于   : not equal            ne
+
+    
+
+    
+    操作        格式                        示例                
+
+
+    等于        {key : value}               db.tmp.find({'age':20})
+
+
+    小于        {key : {$lt : value}}       db.tmp.find({'age':{$lt:20}})
+
+
+    小于等于    {key : {$lte : value}}      db.tmp.find({'age':{$lte:20}})
+
+
+    大于        {key : {$gt : value}}       db.tmp.find({'age':{$gt:20}})
+
+
+    大于等于    {key : {$gte : value}}      db.tmp.find({'age':{$gte:20}})
+
+
+    不等于      {key : {$ne : value}}       db.tmp.find({'age':{$ne:20}})
+
+
+    <2> and 条件
+
+        query 中写多个键值
+
+     
+        示 例 : db.users.find({'age':{$gt:30},'sex':'男'})
+    
+        错 误 : db.users.find({'age':{$gt:30},'age':{$lte:80}})
+
+                               查询年龄 大于30 和 小于80的.
+
+        总 结 : 逻辑与条件 找区间时 有问题. 其他正常
+
+
+    <3> or 条件
+
+        语 法 : find( { $or: [ {key1:value1},{key2:value2} ] } )
+
+                find()内 必须先用 {},$or条件的用 [],内部的或条件分别用 {}
+
+
+    <4> and 和 or 联合使用
+
+        语法  : find({{},$or:[{},{}]}) 
+
+        示 例 : find({'age':21,$or[{'uname':'张三'},{'uname':'zhangsan'}]}) 
+
+
+
+六. 聚 合 函 数 和 分 组 :
+
+    
+    以下示例中 likes 为点赞数
+
+    { "_id" : 1011, "title" : "细说 php", "author" :  "高洛峰", "likes" : 100 }
+    { "_id" : 1012, "title" : "细说 java", "author" : "高洛峰", "likes" : 100 }
+    { "_id" : 1013, "title" : "细说 python", "author":"姚清林"," likes" : 200 }
+    { "_id" : 1014, "title" : "细说 go", "author" : "姚庆林", "likes" : 150 }
+
+
+    <1> 求指定的分组中 某项和 :
+
+      db.集合名.聚合([{$分组:{$用谁分组,结果名:{$sum:找到一次算几次}}}])
+
+        db.books.aggregate([{$group:{_id:'$author',num:{$sum:1}}}])
+
+        return { "_id" : "姚清林", "文章数" : 1 }
+               { "_id" : "姚庆林", "文章数" : 1 }
+               { "_id" : "高洛峰", "文章数" : 2 }
+
+
+    <2> 求 指定的分组中 某一键的 最大值 :
+    
+      db.集合名.聚合([{$分组:{$用谁分组,结果名:{$max:$哪个键?}}}])
+                                                 结果是该键中的max            
+                                                
+        db.books.aggregate([{$group:{_id:'$author',max:{$max:$likes}}}])
+
+        
+    <3> 求 指定的分组中 某一键的 最小值 :
+   
+        db.集合名.聚合([{$分组:{_id:$用谁分组,结果名:{$min:$哪个键?}}}])
+                                                    结果是该键中的min            
+        db.books.aggregate([{$group:{_id:'$author',max:{$min:$likes}}}])
+
+
+    <4> 求 指定分组中 某一键的 平均值 : 
+
+    db.books.aggregate([{$group:{_id:'$author','平均点赞数':{$avg:'$likes'}}}])
+
+
+
+七. 其 他 :
+
+
+    <1> mongo 启动警告
+
+        using the XFS filesystem is strongly recommended with the 
+
+        WiredTiger storage engine
+
+        强烈推荐使用wiredtiger存储引擎
+
+        
+        access control is not enabled for the database
+
+        数据库未启用访问控制
+
+
+        read and write access to data and configuration is unrestricted
+
+        对数据和配置的读写访问是不受限制的
+
+
+    <2> 创建新库后,库会存在,但是如果库里没有数据,只不过不会显示.
